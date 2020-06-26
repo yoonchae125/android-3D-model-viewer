@@ -216,9 +216,11 @@ public class SceneLoader implements LoaderTask.Callback {
         if (objects.isEmpty()) return;
 
         if (doAnimation) {
+            Log.d("codbs","doAnimation");
             for (int i=0; i<objects.size(); i++) {
                 Object3DData obj = objects.get(i);
-                animator.update(obj, isShowBindPose());
+//                animator.update(obj, isShowBindPose());
+                animator.update(obj, true);
             }
         }
     }

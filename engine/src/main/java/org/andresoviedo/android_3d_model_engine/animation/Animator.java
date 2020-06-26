@@ -9,6 +9,7 @@ import org.andresoviedo.android_3d_model_engine.model.Object3DData;
 import org.andresoviedo.android_3d_model_engine.services.collada.entities.Joint;
 import org.andresoviedo.util.math.Quaternion;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,21 +88,50 @@ public class Animator {
 			bindPose(animatedModel, (animatedModel).getRootJoint(), IDENTITY_MATRIX);
 		}
 	}
-
+//	private Quaternion getLocalRotation(Joint joint, Quaternion worldRotation) {
+//		Quaternion localRotation = null;
+//		if (parents.size() == 0) {
+//			return worldRotation;
+//		}
+//		Log.d("codbs", "start" + bone.getName());
+//		for (int i = parents.size() - 3; i >= 0; i--) {
+//			String name = parents.get(i);
+//			Log.d("codbs", name);
+////            if (parentLocalRotation == null) {
+//////                parentLocalRotation = boneLocalQuaternions.get(name);
+//////                parentLocalRotation = skeleton.getBone(name).getLocalRotation();
+////                parentLocalRotation = new Quaternion();
+////            } else {
+//			parentLocalRotation = parentLocalRotation.mult(skeleton.getBone(name).getLocalRotation());
+////            }
+//		}
+//
+//		localRotation = parentLocalRotation.inverse().mult(worldRotation);
+//		localRotation.set(localRotation.getX() * x, localRotation.getY() * y, localRotation.getZ() * z, localRotation.getW());
+//		return localRotation;
+//	}
 	private void bindPose(AnimatedModel animatedModel, Joint joint, final float[] parentTransform){
 
-		/*if (cache.containsKey(joint.getName()+"-already-processed"))
-			return;*/
-
-		// performance optimization - reuse buffers
+// performance optimization - reuse buffers
 		float[] currentTransform = cache.get(joint.getName());
 		if (currentTransform == null){
 			currentTransform = new float[16];
 			cache.put(joint.getName(), currentTransform);
 		}
 
-		// apply joint local transform to current (parent) transform
-		Matrix.multiplyMM(currentTransform, 0, parentTransform, 0, joint.getBindLocalTransform(), 0);
+		if (joint.getName().equals("mixamorig1_Neck")) {
+			float[] initial = joint.getBindLocalTransform();
+			float[] rotation = new float[16];
+			float[] localTransformation = new float[16];
+			Quaternion q = new Quaternion(0, 0.7068252f, 0, 0.7073883f);
+			q.toRotationMatrix(rotation);
+			Matrix.multiplyMM(localTransformation, 0, rotation, 0, initial, 0);
+			// apply joint local transform to current (parent) transform
+			Matrix.multiplyMM(currentTransform, 0, parentTransform, 0, localTransformation, 0);
+		} else {
+			Matrix.multiplyMM(currentTransform, 0, parentTransform, 0, joint.getBindLocalTransform(), 0);
+		}
+
 
 		// apply calculated transform to inverse matrix for joints only
 		if (joint.getIndex() >= 0) {
@@ -127,6 +157,7 @@ public class Animator {
 	}
 
 	private void initAnimation(AnimatedModel animatedModel) {
+
 		if (animatedModel.getAnimation().isInitialized()) {
 			return;
 		}
